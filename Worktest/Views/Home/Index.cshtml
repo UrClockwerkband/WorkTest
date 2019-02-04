@@ -1,0 +1,105 @@
+﻿@{
+    ViewData["Title"] = "TestGrid";
+}
+
+<div id="gridDiv"></div>
+
+@section Scripts { 
+<script type="text/javascript">
+
+    Ext.define('User', {
+        extend: 'Ext.data.Model',
+        idProperty: 'Id',
+        fields: ['Id', 'FIO', 'Birth', 'Phone' ]
+    });
+
+    var userStore =  Ext.create('Ext.data.Store', {
+        model: 'User',
+        autoLoad: true,
+        pageSize: 100,
+        listeners: {
+            write: function (store) { // 2nd; data items populated, controls still empty
+                this.load();
+            }
+        },
+        autoSync: true,
+        proxy: {
+            type: 'ajax',
+            api: {
+                read: 'Home/GetData',
+                create: 'Home/CreateRow',
+                update: 'Home/UpdateData',
+                destroy: 'Home/Delete'
+            },
+            reader: {
+                type: 'json'
+            },
+            writer: {
+                type: 'json'
+            }
+        }
+    });
+
+    var myGrid = Ext.create('Ext.grid.Panel', {
+        renderTo: document.body,
+        store: userStore,
+        id: 'myGrid',
+        tbar: new Ext.Toolbar({
+            items: [
+                {
+                    text: 'Add new Row',
+                    handler: function () {
+                        var newRow = new User({
+                            id: null,
+                            FIO: 'Test',
+                            Birth: '01.01.2001',
+                            Phone: 'Test'
+                        });
+                        userStore.insert(0, newRow);
+                    }
+                },
+                {
+                    text: 'Delete selected row',
+                    handler: function () {
+                        // myStore.remove(user1);
+                        userStore.remove(myGrid.getSelectionModel().getSelection()[0]);
+                    }
+                }
+            ]
+        }), 
+
+        plugins: [{
+            ptype: 'rowediting',
+            clicksToEdit: 2
+        }],
+        fullscreen: true,
+        title: 'Application Users',
+        columns: [
+            {
+                text: 'Id',
+                flex: 1,
+                dataIndex: 'Id',
+                editor: 'textfield'
+            },
+            {
+                text: 'Name',
+                flex: 1,
+                dataIndex: 'FIO',
+                editor: 'textfield'
+            },
+            {
+                dataIndex: 'Birth',
+                flex: 0,
+                editor: 'datefield',
+                renderer: Ext.util.Format.dateRenderer('d.m.Y')
+            },
+            {
+                text: 'Phone Number',
+                flex: 1,
+                dataIndex: 'Phone',
+                editor: 'textfield',
+            }
+        ]
+    });
+</script>
+}
